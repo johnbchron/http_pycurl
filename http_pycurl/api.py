@@ -16,7 +16,7 @@ def get(url, params=None, **kwargs):
     """Sends a GET request"""
     return request('get', url, params=params, **kwargs)
 
-def post(url, data=None, **kwargs):
+def post(url, data=None, raw_data=None, **kwargs):
     """Sends a POST request"""
     return request('post', url, data=data, **kwargs)
 

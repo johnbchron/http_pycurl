@@ -5,6 +5,10 @@ http_pycurl.models
 
 """
 import json
+try:
+    from io import BytesIO
+except ImportError:
+    from StringIO import StringIO as BytesIO
 from urllib.parse import urlencode, urlparse, urlunparse
 
 from .exceptions import InvalidURL
@@ -26,13 +30,14 @@ class PreparedRequest():
 
     def prepare(self,
                 method=None, url=None, headers=None,
-                data=None, params=None, cookies=None):
+                data=None, raw_data=None, params=None,
+                cookies=None):
 
         self.prepare_method(method)
         self.prepare_url(url, params)
         self.prepare_headers(headers)
         self.prepare_cookies(cookies)
-        self.prepare_body(data)
+        self.prepare_body(data, raw_data)
 
 
     @staticmethod
@@ -91,18 +96,27 @@ class PreparedRequest():
             self.headers['Cookie'] = cookies_str
             self.header_list.append('cookie'+ ':' + cookies_str)
 
-    def prepare_body(self, data):
+    def prepare_body(self, data, raw_data):
         """Turn post data dict to string.
         :param data: a dict
         """
         self.data = urlencode(data)
+        if isinstance(raw_data, dict):
+            self.raw_data = BytesIO(json.dumps(raw_data).encode('utf-8'))
+        elif isinstance(raw_data, str):
+            self.raw_data = BytesIO(raw_data.encode('utf-8'))
+        elif raw_data is None:
+            self.raw_data = None
+        else:
+            raise TypeError("raw_data must be dict or str, but got " + str(type(raw_data)))
 
 
 class Request():
 
     def __init__(self,
                  method=None, url=None, headers=None,
-                 params=None, data=None, cookies=None):
+                 params=None, data=None, raw_data=None,
+                 cookies=None):
 
         params = {} if not params else params
         data = [] if not data else data
@@ -112,6 +126,7 @@ class Request():
         self.url = url
         self.headers = headers
         self.data = data
+        self.raw_data = raw_data
         self.params = params
         self.cookies = cookies
 
@@ -126,6 +141,7 @@ class Request():
             url=self.url,
             headers=self.headers,
             data=self.data,
+            raw_data=self.raw_data,
             params=self.params,
             cookies=self.cookies,
         )

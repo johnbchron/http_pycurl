@@ -43,8 +43,8 @@ class Session(object):
         self.__c = pycurl.Curl()
 
     def request(self, method, url,
-                params=None, data=None, headers=None, cookies=None,
-                proxies=None, timeout=30, allow_redirects=True):
+                params=None, data=None, raw_data=None, headers=None,
+                cookies=None, proxies=None, timeout=30, allow_redirects=True):
 
         self.netloc = urlparse(url).netloc
 
@@ -87,8 +87,8 @@ class Session(object):
         return self.request('GET', url, **kwargs)
 
 
-    def post(self, url, data=None, **kwargs):
-        return self.request('POST', url, data=data, **kwargs)
+    def post(self, url, data=None, raw_data=None, **kwargs):
+        return self.request('POST', url, data=data, raw_data=raw_data **kwargs)
 
     def head(self, url, **kwargs):
         return self.request('HEAD', url, **kwargs)
@@ -121,6 +121,8 @@ class Session(object):
 
         if request.method == 'POST':
             c.setopt(pycurl.POSTFIELDS, request.data)
+            if request.raw_data:
+                c.setopt(pycurl.READDATA, request.raw_data)
 
         if request.method == 'HEAD':
             c.setopt(pycurl.NOBODY, True)
